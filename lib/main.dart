@@ -5,13 +5,16 @@ import 'home.dart';
 
 late List<CameraDescription> cameras;
 
-Future<Null> main() async {
+Future<void> main() async {
+  // Ensure that Flutter is initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
   try {
     cameras = await availableCameras();
   } on CameraException catch (e) {
     print('Error: $e.code\nError Message: $e.message');
   }
-  runApp(new MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {

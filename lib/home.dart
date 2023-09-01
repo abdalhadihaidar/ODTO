@@ -23,7 +23,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late List<dynamic> _recognitions;
+  late List<dynamic> _recognitions = []; // Initialize here
   final Null ans = null;
   int _imageHeight = 0;
   int _imageWidth = 0;
@@ -312,7 +312,7 @@ class _HomePageState extends State<HomePage> {
             setRecognitions,
           ),
           BndBox(
-              _recognitions == null ? [] : _recognitions,
+              _recognitions ,
               math.max(_imageHeight, _imageWidth),
               math.min(_imageHeight, _imageWidth),
               screen.height,
