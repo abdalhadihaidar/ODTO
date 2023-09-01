@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     FlutterTts flutterTts = new FlutterTts();
-    flutterTts.speak("Welcome to a eye, ready for your service");
+    flutterTts.speak("Welcome to a ODTO, ready for your service");
   }
   loadModel() async {
     FlutterTts flutterTts = FlutterTts();
@@ -217,7 +217,7 @@ class _HomePageState extends State<HomePage> {
     Size screen = MediaQuery.of(context).size;
     var Fontweight;
     return Scaffold(
-      backgroundColor: Color(0xff7F84BE),
+      backgroundColor: Color(0xff000000),
       body: _model == ""
           ? Center(
         child: ListView(
@@ -228,11 +228,11 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(height: 10),
                   SizedBox(height: 10),
                   Image.asset(
-                    'assets/lola.gif',
+                    'assets/lol.png',
                   ),
                   SizedBox(height: 10),
                   Text(
-                    "A-EYE",
+                    "ODTO",
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -279,26 +279,6 @@ class _HomePageState extends State<HomePage> {
 
                   SizedBox(height: 10),
 
-                  ButtonTheme(
-                    minWidth: 180.0,
-                    height: 35.0,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        primary: Colors.deepPurpleAccent,
-                      ),
-                      onPressed: () {
-                        DeviceApps.openApp('com.example.ashwin.textdetector');
-                      },
-                      child: Text(
-                        "OCR/YOLO",
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w300,
-                          fontFamily: "Raleway",
-                        ),
-                      ),
-                    ),
-                  ),
 
                 ],
               ),]
