@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'models.dart';
 
-
 class BndBox extends StatelessWidget {
   final List<dynamic> results;
   final int previewH;
@@ -11,8 +10,7 @@ class BndBox extends StatelessWidget {
   final double screenW;
   final String model;
 
-  BndBox(this.results, this.previewH, this.previewW, this.screenH, this.screenW,
-      this.model);
+  BndBox(this.results, this.previewH, this.previewW, this.screenH, this.screenW, this.model);
 
   @override
   Widget build(BuildContext context) {
@@ -25,19 +23,14 @@ class BndBox extends StatelessWidget {
         var scaleW, scaleH, x, y, w, h;
 
         if (screenH / screenW > previewH / previewW) {
-
           scaleW = screenH / previewH * previewW;
           scaleH = screenH;
-          print(scaleH);
-          print(scaleW);
           var difW = (scaleW - screenW) / scaleW;
           x = (_x - difW / 2) * scaleW;
           w = _w * scaleW;
           if (_x < difW / 2) w -= (difW / 2 - _x) * scaleW;
           y = _y * scaleH;
           h = _h * scaleH;
-          print(x);
-          print(y);
         } else {
           scaleH = screenW / previewW * previewH;
           scaleW = screenW;
@@ -46,11 +39,7 @@ class BndBox extends StatelessWidget {
           w = _w * scaleW;
           y = (_y - difH / 2) * scaleH;
           h = _h * scaleH;
-          print(x);
-          print(y);
           if (_y < difH / 2) h -= (difH / 2 - _y) * scaleH;
-          print(x);
-          print(y);
         }
 
         return Positioned(
@@ -121,6 +110,7 @@ class BndBox extends StatelessWidget {
             x = _x * scaleW;
             y = (_y - difH / 2) * scaleH;
           }
+
           return Positioned(
             left: x - 6,
             top: y - 6,
@@ -147,40 +137,9 @@ class BndBox extends StatelessWidget {
     return Stack(
       children: model == mobilenet
           ? _renderStrings()
-          : model == posenet ? _renderKeypoints() : _renderBoxes(),
+          : model == posenet
+          ? _renderKeypoints()
+          : _renderBoxes(),
     );
-
-    /* try1(){
-    print(results);
-    results.map((re){
-    if(re["confidenceInClass"]>0.5){
-      //FlutterTts flutterTts = new FlutterTts();
-      //flutterTts.speak("surpriiise mother fucker !");
-      //flutterTts.setSilence(3);
-      //VoiceController controller =
-        //                  FlutterTextToSpeech.instance.voiceController();
-      //controller.init().then((_) {
-        //    controller.speak("There is a ${re["detectedClass"]} ahead!!!",
-        //    VoiceControllerOptions(delay: 3));
-      //});
-      print(math.max(0,x));
-      print("This is ${re["detectedClass"]} with ${re["confidenceInClass"]}");
-      Toast.show("There is a ${re["detectedClass"]} ahead!!!", context, duration: Toast.LENGTH_SHORT, gravity:  Toast.BOTTOM);
-
-    }
-
-    }).toList();
-    //var object = recognitions.where((user) => user[""] > 50);
-    //print(object);
-  */
-
   }
-
-
-
-
-
-
-
-
 }
