@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+
+
 import 'package:camera/camera.dart';
-import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
+import 'package:tflite_v2/tflite_v2.dart';
 import 'dart:math' as math;
+
 import 'models.dart';
 
 typedef void Callback(List<dynamic> list, int h, int w);
@@ -25,10 +28,10 @@ class _CameraState extends State<Camera> {
   void initState() {
     super.initState();
 
-    if (widget.cameras == null || widget.cameras.isEmpty) {
+    if (widget.cameras == null || widget.cameras.length < 1) {
       print('No camera is found');
     } else {
-      controller = CameraController(
+      controller = new CameraController(
         widget.cameras[0],
         ResolutionPreset.medium,
       );
@@ -38,23 +41,73 @@ class _CameraState extends State<Camera> {
         }
         setState(() {});
 
-        controller.startImageStream((CameraImage img) async {
+        controller.startImageStream((CameraImage img) {
           if (!isDetecting) {
             isDetecting = true;
-            int startTime = DateTime.now().millisecondsSinceEpoch;
+
+            int startTime = new DateTime.now().millisecondsSinceEpoch;
+
             if (widget.model == mobilenet) {
-              // Load the MobileNet model
-              tfl.Interpreter interpreter = await tfl.Interpreter.fromAsset('assets/mobilenet_v1_1.0_224.tflite');
-              List<Object> bytesList = img.planes.map((plane) => plane.bytes).toList();
-              var outputs = {'imageHeight': img.height, 'imageWidth': img.width, 'numResults': 2};
-              interpreter.runForMultipleInputs(bytesList, outputs.cast<int, Object>());
-              int endTime = DateTime.now().millisecondsSinceEpoch;
-              print(outputs);
-              print("Detection took ${endTime - startTime}");
-              isDetecting = false;
-              interpreter.close();
+              Tflite.runModelOnFrame(
+                bytesList: img.planes.map((plane) {
+                  return plane.bytes;
+                }).toList(),
+                imageHeight: img.height,
+                imageWidth: img.width,
+                numResults: 2,
+              ).then((recognitions) {
+                int endTime = new DateTime.now().millisecondsSinceEpoch;
+                print("Detection took ${endTime - startTime}");
+
+                widget.setRecognitions(recognitions!, img.height, img.width);
+
+                isDetecting = false;
+              });
+            } else if (widget.model == posenet) {
+              Tflite.runPoseNetOnFrame(
+                bytesList: img.planes.map((plane) {
+                  return plane.bytes;
+                }).toList(),
+                imageHeight: img.height,
+                imageWidth: img.width,
+                numResults: 2,
+              ).then((recognitions) {
+                int endTime = new DateTime.now().millisecondsSinceEpoch;
+                print("Detection took ${endTime - startTime}");
+
+                widget.setRecognitions(recognitions!, img.height, img.width);
+
+                isDetecting = false;
+              });
+            } else {
+              Future.delayed(const Duration(seconds: 2), () {
+                Tflite.detectObjectOnFrame(
+                  bytesList: img.planes.map((plane) {
+                    return plane.bytes;
+                  }).toList(),
+                  model: widget.model == yolo ? "YOLO" : "SSDMobileNet",
+                  imageHeight: img.height,
+                  imageWidth: img.width,
+                  imageMean: widget.model == yolo ? 0 : 127.5,
+                  imageStd: widget.model == yolo ? 255.0 : 127.5,
+                  numResultsPerClass: 1,
+                  threshold: widget.model == yolo ? 0.2 : 0.4,
+                ).then((recognitions) {
+                  int endTime = new DateTime.now().millisecondsSinceEpoch;
+                  print("Detection took ${endTime - startTime}");
+                  // String x="";
+                  // String y="";
+                  // x=recognitions[0];
+                  //recognitions[2]=y;
+
+
+                  widget.setRecognitions(recognitions!, img.height, img.width);
+                  // print("There is a $x ahead RrR!!!");
+                  //Toast.show("There is a ${recognitions.detectedClass} ahead!!!", context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
+                  isDetecting = false;
+                });
+              });
             }
-            // Handle other model cases (posenet, yolo, ssd_mobilenet) here...
           }
         });
       });
@@ -83,8 +136,10 @@ class _CameraState extends State<Camera> {
     var previewRatio = previewH / previewW;
 
     return OverflowBox(
-      maxHeight: screenRatio > previewRatio ? screenH : screenW / previewW * previewH,
-      maxWidth: screenRatio > previewRatio ? screenH / previewH * previewW : screenW,
+      maxHeight:
+      screenRatio > previewRatio ? screenH : screenW / previewW * previewH,
+      maxWidth:
+      screenRatio > previewRatio ? screenH / previewH * previewW : screenW,
       child: CameraPreview(controller),
     );
   }

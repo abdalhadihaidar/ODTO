@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
-
+import 'package:tflite_v2/tflite_v2.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'bndbox.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 import 'package:device_apps/device_apps.dart';
+
 import 'dart:math' as math;
 
 import 'camera.dart';
@@ -23,7 +23,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late List<dynamic> _recognitions = []; // Initialize here
+  late List<dynamic> _recognitions;
   final Null ans = null;
   int _imageHeight = 0;
   int _imageWidth = 0;
@@ -44,73 +44,65 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     FlutterTts flutterTts = new FlutterTts();
-    flutterTts.speak("Welcome to a ODTO, ready for your service");
+    flutterTts.speak("Welcome to a odto, ready for your service");
   }
-  loadModel() async {
-    FlutterTts flutterTts = FlutterTts();
-    flutterTts.speak("Your object detection has been started using SSD Mobilenet Model");
 
-    tfl.Interpreter interpreter;
+  loadModel() async {
+    FlutterTts flutterTts = new FlutterTts();
+    flutterTts.speak("Your object detection has been started using SSD Mobilenet Model");
     String res;
     switch (_model) {
       case yolo:
-        try {
-          interpreter = await tfl.Interpreter.fromAsset('assets/yolov2_tiny.tflite');
-        } catch (e) {
-          print("Error loading model: $e");
-          return;
-        }
+        res = (await Tflite.loadModel(
+          model: "assets/yolov2_tiny.tflite",
+          labels: "assets/yolov2_tiny.txt",
+        ))!;
         break;
 
       case mobilenet:
-        try {
-          interpreter = await tfl.Interpreter.fromAsset('assets/mobilenet_v1_1.0_224.tflite');
-        } catch (e) {
-          print("Error loading model: $e");
-          return;
-        }
+        res = (await Tflite.loadModel(
+            model: "assets/mobilenet_v1_1.0_224.tflite",
+            labels: "assets/mobilenet_v1_1.0_224.txt"))!;
         break;
 
       case posenet:
-        try {
-          interpreter = await tfl.Interpreter.fromAsset('assets/posenet_mv1_075_float_from_checkpoints.tflite');
-        } catch (e) {
-          print("Error loading model: $e");
-          return;
-        }
+        res = (await Tflite.loadModel(
+            model: "assets/posenet_mv1_075_float_from_checkpoints.tflite"))!;
         break;
 
       default:
-        try {
-          interpreter = await tfl.Interpreter.fromAsset('assets/ssd_mobilenet.tflite');
-        } catch (e) {
-          print("Error loading model: $e");
-          return;
-        }
+        res = (await Tflite.loadModel(
+            model: "assets/ssd_mobilenet.tflite",
+            labels: "assets/ssd_mobilenet.txt"))!;
     }
-    print(interpreter);
-    interpreter.close();
+    print(res);
   }
 
   onSelect(model) {
     setState(() {
       _model = model;
-      //Toast.show("You are using $_model model for object detection !!!", context, duration: Toast.LENGTH_LONG, gravity:  Toast.BOTTOM);
-
-
+      Fluttertoast.showToast(
+          msg: "You are using $_model model for object detection !!!",
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM);
     });
+
+    // Call setRecognitions to initialize _recognitions
+    setRecognitions([], 0, 0);
     loadModel();
   }
 
+
   setRecognitions(recognitions, imageHeight, imageWidth) {
     setState(() {
-      _recognitions = recognitions;
+      _recognitions = recognitions ?? []; // Initialize with an empty list if null
       _imageHeight = imageHeight;
       _imageWidth = imageWidth;
 
       try1();
     });
   }
+
 
   try1(){
     Size screen = MediaQuery.of(context).size;
@@ -194,11 +186,7 @@ class _HomePageState extends State<HomePage> {
 
 
         //print("This is ${re["detectedClass"]} with ${re["confidenceInClass"]}");
-        Fluttertoast.showToast(
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          msg: 'There is a ${re["detectedClass"]} ahead!!!',
-        );
+        Fluttertoast.showToast(msg: "There is a ${re["detectedClass"]} ahead!!!",  toastLength: Toast.LENGTH_SHORT, gravity:  ToastGravity.BOTTOM);
 
       }
 
@@ -215,9 +203,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     Size screen = MediaQuery.of(context).size;
-    var Fontweight;
     return Scaffold(
-      backgroundColor: Color(0xff000000),
+      backgroundColor: Color(0xff7F84BE),
       body: _model == ""
           ? Center(
         child: ListView(
@@ -283,6 +270,9 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),]
         ),
+      ): _recognitions == null
+          ? Center(
+        child: CircularProgressIndicator(), // Loading indicator
       )
           : Stack(
         children: [
@@ -292,16 +282,15 @@ class _HomePageState extends State<HomePage> {
             setRecognitions,
           ),
           BndBox(
-              _recognitions ,
-              math.max(_imageHeight, _imageWidth),
-              math.min(_imageHeight, _imageWidth),
-              screen.height,
-              screen.width,
-              _model),
+            _recognitions,
+            math.max(_imageHeight, _imageWidth),
+            math.min(_imageHeight, _imageWidth),
+            screen.height,
+            screen.width,
+            _model,
+          ),
         ],
       ),
-
     );
-
   }
 }
